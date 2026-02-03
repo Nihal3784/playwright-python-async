@@ -1,25 +1,17 @@
 pipeline {
     agent any
 
-    // 1. Schedule nightly run (cron)
-    triggers {
-        cron('5 16 * * *') // runs daily at ~2 AM, H avoids collisions
-    }
-
     environment {
-        // Email credentials stored in Jenkins Credentials as "jenkins_email"
-        SMTP_USER = credentials('jenkins_email_user')
-        SMTP_PASS = credentials('jenkins_email_pass')
-
-        // Playwright project paths
-        REPORTS_DIR = 'reports'
-        SCREENSHOTS_DIR = 'screenshots'
+        // Email credentials stored in Jenkins
+        JENKINS_EMAIL_CREDENTIALS = 'jenkins_email_pass'
+        RECIPIENT_EMAIL = 'nihal.j@cronberry.com'
+        TZ = 'Asia/Kolkata' // Force timezone for cron and build
     }
 
-    options {
-        // Keep build logs for 30 days
-        buildDiscarder(logRotator(daysToKeepStr: '30'))
-        timestamps()
+    triggers {
+        // Cron in IST timezone
+        // 15 16 * * * -> 16:15 IST
+        cron('15 16 * * *')
     }
 
     stages {
@@ -31,54 +23,53 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'python -m venv .venv'
-                sh '. .venv/bin/activate && pip install -r requirements.txt'
+                sh 'pip install -r requirements.txt'
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Playwright Tests') {
             steps {
-                sh '''
-                    . .venv/bin/activate
-                    pytest tests --alluredir=$REPORTS_DIR --capture=tee-sys
-                '''
+                // Run tests and generate reports
+                sh 'pytest --alluredir=reports/allure-results'
             }
         }
 
         stage('Generate Allure Report') {
             steps {
-                sh '''
-                    allure generate $REPORTS_DIR -o $REPORTS_DIR/html --clean
-                '''
+                sh 'allure generate reports/allure-results --clean -o reports/allure-report || true'
             }
         }
     }
 
     post {
         always {
-            archiveArtifacts artifacts: 'reports/html/**', fingerprint: true
-            archiveArtifacts artifacts: 'screenshots/**', fingerprint: true
-            archiveArtifacts artifacts: 'logs/**', fingerprint: true
+            node {
+                // Archive Screenshots & Allure reports
+                archiveArtifacts artifacts: 'screenshots/**, reports/**', allowEmptyArchive: true
+
+                // Send email notification
+                emailext(
+                    subject: "Jenkins Build ${currentBuild.fullDisplayName}",
+                    body: """Build Status: ${currentBuild.currentResult}
+
+Check the reports and screenshots attached.
+
+Jenkins Console: ${env.BUILD_URL}""",
+                    to: "${env.RECIPIENT_EMAIL}",
+                    attachLog: true,
+                    attachmentsPattern: 'screenshots/**, reports/**',
+                    mimeType: 'text/html',
+                    credentialsId: "${env.JENKINS_EMAIL_CREDENTIALS}"
+                )
+            }
         }
 
         success {
-            mail bcc: '',
-                 body: "Build SUCCESSFUL\nCheck reports and screenshots attached.",
-                 cc: '',
-                 from: 'jenkins@example.com',
-                 replyTo: 'jenkins@example.com',
-                 subject: "Jenkins Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 to: 'nihal.j@cronberry.com'
+            echo "Build succeeded!"
         }
 
         failure {
-            mail bcc: '',
-                 body: "Build FAILED\nCheck reports and screenshots attached.",
-                 cc: '',
-                 from: 'jenkins@example.com',
-                 replyTo: 'jenkins@example.com',
-                 subject: "Jenkins Build FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                 to: 'nihal.j@cronberry.com'
+            echo "Build failed!"
         }
     }
 }
