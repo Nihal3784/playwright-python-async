@@ -1,75 +1,54 @@
 pipeline {
     agent any
 
-    options {
-        timestamps()
-        buildDiscarder(logRotator(numToKeepStr: '10'))
+    // 1. Schedule nightly run (cron)
+    triggers {
+        cron('5 16 * * *') // runs daily at ~2 AM, H avoids collisions
     }
 
     environment {
-        VENV_DIR = ".venv"
+        // Email credentials stored in Jenkins Credentials as "jenkins_email"
+        SMTP_USER = credentials('jenkins_email_user')
+        SMTP_PASS = credentials('jenkins_email_pass')
+
+        // Playwright project paths
+        REPORTS_DIR = 'reports'
+        SCREENSHOTS_DIR = 'screenshots'
+    }
+
+    options {
+        // Keep build logs for 30 days
+        buildDiscarder(logRotator(daysToKeepStr: '30'))
+        timestamps()
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Verify Python') {
-            steps {
-                sh '''
-                    echo "Python location:"
-                    which python3
-                    python3 --version
-                '''
-            }
-        }
-
-        stage('Setup Virtual Environment') {
-            steps {
-                sh '''
-                    rm -rf ${VENV_DIR}
-                    python3 -m venv ${VENV_DIR}
-                    . ${VENV_DIR}/bin/activate
-
-                    python --version
-                    python -m pip install --upgrade pip setuptools wheel
-                '''
-            }
-        }
-
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    . ${VENV_DIR}/bin/activate
-                    pip install -r requirements.txt
-                '''
-            }
-        }
-
-        stage('Install Playwright Browsers') {
-            steps {
-                sh '''
-                    . ${VENV_DIR}/bin/activate
-                    playwright install --with-deps
-                '''
+                sh 'python -m venv .venv'
+                sh '. .venv/bin/activate && pip install -r requirements.txt'
             }
         }
 
         stage('Run Tests') {
             steps {
                 sh '''
-                    . ${VENV_DIR}/bin/activate
+                    . .venv/bin/activate
+                    pytest tests --alluredir=$REPORTS_DIR --capture=tee-sys
+                '''
+            }
+        }
 
-                    pytest \
-                      -v \
-                      --tb=short \
-                      --html=reports/pytest-report.html \
-                      --self-contained-html \
-                      --alluredir=reports/allure-results
+        stage('Generate Allure Report') {
+            steps {
+                sh '''
+                    allure generate $REPORTS_DIR -o $REPORTS_DIR/html --clean
                 '''
             }
         }
@@ -77,20 +56,29 @@ pipeline {
 
     post {
         always {
-            echo "Archiving test reports"
-            archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
-        }
-
-        failure {
-            echo "Build failed"
+            archiveArtifacts artifacts: 'reports/html/**', fingerprint: true
+            archiveArtifacts artifacts: 'screenshots/**', fingerprint: true
+            archiveArtifacts artifacts: 'logs/**', fingerprint: true
         }
 
         success {
-            echo "Build successful"
+            mail bcc: '',
+                 body: "Build SUCCESSFUL\nCheck reports and screenshots attached.",
+                 cc: '',
+                 from: 'jenkins@example.com',
+                 replyTo: 'jenkins@example.com',
+                 subject: "Jenkins Build SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 to: 'nihal.j@cronberry.com'
         }
 
-        cleanup {
-            sh 'rm -rf ${VENV_DIR}'
+        failure {
+            mail bcc: '',
+                 body: "Build FAILED\nCheck reports and screenshots attached.",
+                 cc: '',
+                 from: 'jenkins@example.com',
+                 replyTo: 'jenkins@example.com',
+                 subject: "Jenkins Build FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 to: 'nihal.j@cronberry.com'
         }
     }
 }
