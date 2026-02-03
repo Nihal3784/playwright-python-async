@@ -2,16 +2,11 @@ pipeline {
     agent any
 
     environment {
-        // Email credentials stored in Jenkins
-        JENKINS_EMAIL_CREDENTIALS = 'jenkins_email_pass'
-        RECIPIENT_EMAIL = 'nihal.j@cronberry.com'
-        TZ = 'Asia/Kolkata' // Force timezone for cron and build
+        TZ = 'Asia/Kolkata' // Force IST timezone
     }
 
     triggers {
-        // Cron in IST timezone
-        // 15 16 * * * -> 16:15 IST
-        cron('15 16 * * *')
+        cron('15 16 * * *') // 4:15 PM IST daily
     }
 
     stages {
@@ -29,7 +24,6 @@ pipeline {
 
         stage('Run Playwright Tests') {
             steps {
-                // Run tests and generate reports
                 sh 'pytest --alluredir=reports/allure-results'
             }
         }
@@ -43,25 +37,22 @@ pipeline {
 
     post {
         always {
-            node {
-                // Archive Screenshots & Allure reports
-                archiveArtifacts artifacts: 'screenshots/**, reports/**', allowEmptyArchive: true
+            // Archive reports/screenshots
+            archiveArtifacts artifacts: 'screenshots/**, reports/**', allowEmptyArchive: true
 
-                // Send email notification
-                emailext(
-                    subject: "Jenkins Build ${currentBuild.fullDisplayName}",
-                    body: """Build Status: ${currentBuild.currentResult}
+            // Send email notification (SMTP credentials configured in Jenkins)
+            emailext(
+                subject: "Jenkins Build ${currentBuild.fullDisplayName}",
+                body: """Build Status: ${currentBuild.currentResult}
 
 Check the reports and screenshots attached.
 
 Jenkins Console: ${env.BUILD_URL}""",
-                    to: "${env.RECIPIENT_EMAIL}",
-                    attachLog: true,
-                    attachmentsPattern: 'screenshots/**, reports/**',
-                    mimeType: 'text/html',
-                    credentialsId: "${env.JENKINS_EMAIL_CREDENTIALS}"
-                )
-            }
+                to: 'youremail@example.com',
+                attachLog: true,
+                attachmentsPattern: 'screenshots/**, reports/**',
+                mimeType: 'text/html'
+            )
         }
 
         success {
