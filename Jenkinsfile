@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        VENV = ".venv"
+        PATH = "/usr/local/bin:/opt/homebrew/bin:${env.PATH}"
     }
 
     stages {
@@ -15,14 +15,14 @@ pipeline {
         stage('Setup Python Environment') {
     steps {
         sh '''
-            /usr/local/bin/python3.11 --version
-            /usr/local/bin/python3.11 -m venv .venv
-            . .venv/bin/activate
-            pip install --upgrade pip
-            pip install -r requirements.txt
-            playwright install
+        python3 --version
+        python3 -m venv .venv
+        . .venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
+        python -m playwright install
         '''
-            }
+          }
         }
 
 
