@@ -7,9 +7,7 @@ pipeline {
     }
 
     environment {
-        PYTHON_BIN = "/opt/homebrew/bin/python3.11"
-        VENV_DIR  = ".venv"
-        PIP_CACHE_DIR = "${WORKSPACE}/.pip-cache"
+        VENV_DIR = ".venv"
     }
 
     stages {
@@ -23,9 +21,9 @@ pipeline {
         stage('Verify Python') {
             steps {
                 sh '''
-                    echo "Using Python binary:"
-                    ${PYTHON_BIN} --version
-                    which ${PYTHON_BIN}
+                    echo "Python location:"
+                    which python3
+                    python3 --version
                 '''
             }
         }
@@ -34,7 +32,7 @@ pipeline {
             steps {
                 sh '''
                     rm -rf ${VENV_DIR}
-                    ${PYTHON_BIN} -m venv ${VENV_DIR}
+                    python3 -m venv ${VENV_DIR}
                     . ${VENV_DIR}/bin/activate
 
                     python --version
@@ -80,16 +78,7 @@ pipeline {
     post {
         always {
             echo "Archiving test reports"
-
             archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
-
-            script {
-                if (fileExists('reports/pytest-report.html')) {
-                    echo "Pytest HTML report generated"
-                } else {
-                    echo "Pytest HTML report not found"
-                }
-            }
         }
 
         failure {
@@ -101,10 +90,7 @@ pipeline {
         }
 
         cleanup {
-            sh '''
-                echo "Cleaning workspace virtual environment"
-                rm -rf ${VENV_DIR}
-            '''
+            sh 'rm -rf ${VENV_DIR}'
         }
     }
 }
