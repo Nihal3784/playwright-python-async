@@ -1,6 +1,6 @@
-pytest~=8.4.2
-playwright~=1.55.0
-pytest-playwright
-allure-pytest
+pytest
+pytest-asyncio
 pytest-html
-Faker~=40.1.0
+pytest-playwright
+playwright
+allure-pytest
