@@ -6,7 +6,7 @@ pipeline {
     }
 
     triggers {
-        cron('20 16 * * *') // 4:15 PM IST daily
+        cron('20 16 * * *') // 4:15 PM IST
     }
 
     stages {
@@ -18,29 +18,37 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                sh '''
+                   python3 -m venv venv
+                   source venv/bin/activate
+                   pip install --upgrade pip
+                   pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Run Playwright Tests') {
             steps {
-                sh 'pytest --alluredir=reports/allure-results'
+                sh '''
+                   source venv/bin/activate
+                   pytest --alluredir=reports/allure-results
+                '''
             }
         }
 
         stage('Generate Allure Report') {
             steps {
-                sh 'allure generate reports/allure-results --clean -o reports/allure-report || true'
+                sh '''
+                   source venv/bin/activate
+                   allure generate reports/allure-results --clean -o reports/allure-report || true
+                '''
             }
         }
     }
 
     post {
         always {
-            // Archive reports/screenshots
             archiveArtifacts artifacts: 'screenshots/**, reports/**', allowEmptyArchive: true
-
-            // Send email notification (SMTP credentials configured in Jenkins)
             emailext(
                 subject: "Jenkins Build ${currentBuild.fullDisplayName}",
                 body: """Build Status: ${currentBuild.currentResult}
