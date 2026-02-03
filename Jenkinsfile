@@ -37,21 +37,21 @@ pipeline {
     }
 
     post {
-        always {
-            publishHTML(target: [
-                reportDir: 'reports/html',
-                reportFiles: 'report.html',
-                reportName: 'Playwright HTML Report',
-                keepAll: true,
-                alwaysLinkToLastBuild: true
-            ])
+    always {
+        script {
+            if (fileExists('reports/html/report.html')) {
+                publishHTML(target: [
+                    reportDir: 'reports/html',
+                    reportFiles: 'report.html',
+                    reportName: 'Playwright HTML Report',
+                    keepAll: true
+                ])
+            } else {
+                echo "HTML report not found, skipping publish"
+            }
+        }
 
-            allure([
-                includeProperties: false,
-                results: [[path: 'reports/allure-results']]
-            ])
-
-            archiveArtifacts artifacts: 'screenshots/**, videos/**, traces/**', allowEmptyArchive: true
+        archiveArtifacts artifacts: 'screenshots/**, videos/**, traces/**', allowEmptyArchive: true
         }
     }
 }
