@@ -15,15 +15,19 @@ pipeline {
         stage('Setup Python Environment') {
     steps {
         sh '''
+        which python3
         python3 --version
+
         python3 -m venv .venv
         . .venv/bin/activate
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        python -m playwright install
+
+        python3 -m pip install --upgrade pip
+        python3 -m pip install -r requirements.txt
+
+        python3 -m playwright install
         '''
-          }
-        }
+    }
+}
 
 
         stage('Run Playwright Tests') {
