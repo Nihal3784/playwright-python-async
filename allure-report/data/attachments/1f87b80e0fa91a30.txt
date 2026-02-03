@@ -1,0 +1,1 @@
+[31m[1mERROR   [0m AutomationLogger:conftest.py:37 Screenshot saved at: screenshots/test_login_scenarios[--failure-Blank username and blank password]_20260129_123533.png

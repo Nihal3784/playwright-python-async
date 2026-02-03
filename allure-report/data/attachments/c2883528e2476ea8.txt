@@ -1,0 +1,2 @@
+[32mINFO    [0m AutomationLogger:test_role_create_delete.py:29 Created Role: rolejglirsmb
+[32mINFO    [0m AutomationLogger:test_role_create_delete.py:34 Role is successfully deleted

@@ -1,0 +1,4 @@
+[32mINFO    [0m AutomationLogger:test_lead_status.py:20 Creating lead status: createnkyzqcnt
+[32mINFO    [0m AutomationLogger:test_lead_status.py:21 Updating lead status to: updatezefpablu
+[32mINFO    [0m AutomationLogger:test_lead_status.py:40 Deleting lead status: updatezefpablu
+[32mINFO    [0m AutomationLogger:test_lead_status.py:44 Create → Update → Delete lead status flow completed

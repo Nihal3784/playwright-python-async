@@ -1,0 +1,2 @@
+[32mINFO    [0m AutomationLogger:test_create_email_campaign.py:18 Creating campaign: email_abwasrch
+[32mINFO    [0m AutomationLogger:test_create_email_campaign.py:32 Campaign created successfully

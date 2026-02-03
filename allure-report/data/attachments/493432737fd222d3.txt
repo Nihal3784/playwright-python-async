@@ -1,0 +1,1 @@
+[31m[1mERROR   [0m AutomationLogger:conftest.py:37 Screenshot saved at: screenshots/test_login_scenarios[invalid@email.com-123456-failure-Invalid username and valid password]_20260129_123512.png

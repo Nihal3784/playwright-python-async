@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Playwright artifacts
+screenshots/
+videos/
+traces/
+
+# Reports
+reports/html/
+reports/allure-results/
+
+# OS
+.DS_Store
+
+# Logs
+*.log

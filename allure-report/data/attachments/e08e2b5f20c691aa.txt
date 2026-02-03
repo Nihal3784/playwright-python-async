@@ -1,0 +1,2 @@
+[32mINFO    [0m AutomationLogger:test_campaign_template.py:27 Created Role: ('template_sngslc', 'heading_bprarq')
+[32mINFO    [0m AutomationLogger:test_campaign_template.py:30 Template is successfully deleted

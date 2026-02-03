@@ -1,0 +1,1 @@
+[31m[1mERROR   [0m AutomationLogger:conftest.py:37 Screenshot saved at: screenshots/test_login_scenarios[testingdevice2123@gmail.com-wrongpass-failure-Valid username and invalid password]_20260129_123522.png

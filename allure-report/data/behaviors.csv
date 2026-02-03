@@ -1,0 +1,8 @@
+"BROKEN","EPIC","FAILED","FEATURE","PASSED","SKIPPED","STORY","UNKNOWN"
+"0","","0","Create Lead","1","0","Create lead, update and delete","0"
+"0","","3","","1","0","","0"
+"0","","0","Create Email Campaign","1","0","Execute email campaign based on segment audience and verify it is execute properly or not","0"
+"0","","0","Create whatsapp Campaign","1","0","Execute whatsapp campaign based on segment audience and verify it is execute properly or not","0"
+"0","","0","User Management","1","0","Create and Delete Role","0"
+"0","","0","Campaign Template","1","0","Create and Delete Campaign Template","0"
+"0","","0","Create/update lead status ","1","0","This test cases describe how to create and update the lead status","0"

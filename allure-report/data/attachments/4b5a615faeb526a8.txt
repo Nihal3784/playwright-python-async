@@ -1,0 +1,1 @@
+[32mINFO    [0m AutomationLogger:test_login.py:35 Login successful – Valid username and valid password

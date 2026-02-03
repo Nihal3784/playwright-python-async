@@ -1,0 +1,1 @@
+[32mINFO    [0m AutomationLogger:test_add_audience.py:30 Generated lead data: {'name': 'Lead_f08856', 'email': 'user_f08856@gmail.com', 'mobile': '9273998550', 'text': 'SgZVfubSbIwfZdfrAbKf'}

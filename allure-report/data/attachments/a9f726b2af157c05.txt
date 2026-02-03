@@ -1,0 +1,2 @@
+[32mINFO    [0m AutomationLogger:test_whatsapp_campaign.py:18 Creating WhatsApp campaign: auto_zgejazar
+[32mINFO    [0m AutomationLogger:test_whatsapp_campaign.py:32 WhatsApp campaign created successfully
