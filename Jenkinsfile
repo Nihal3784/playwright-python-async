@@ -1,61 +1,111 @@
 pipeline {
     agent any
 
+    options {
+        timestamps()
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
     environment {
-        PATH = "/usr/local/bin:/opt/homebrew/bin:${env.PATH}"
+        PYTHON_BIN = "/opt/homebrew/bin/python3.11"
+        VENV_DIR  = ".venv"
+        PIP_CACHE_DIR = "${WORKSPACE}/.pip-cache"
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Setup Python Environment') {
-    steps {
-        sh '''
-        which python3
-        python3 --version
-
-        python3 -m venv .venv
-        . .venv/bin/activate
-
-        python3 -m pip install --upgrade pip
-        python3 -m pip install -r requirements.txt
-
-        python3 -m playwright install
-        '''
-    }
-}
-
-
-        stage('Run Playwright Tests') {
+        stage('Verify Python') {
             steps {
                 sh '''
-                    . $VENV/bin/activate
-                    pytest
+                    echo "Using Python binary:"
+                    ${PYTHON_BIN} --version
+                    which ${PYTHON_BIN}
+                '''
+            }
+        }
+
+        stage('Setup Virtual Environment') {
+            steps {
+                sh '''
+                    rm -rf ${VENV_DIR}
+                    ${PYTHON_BIN} -m venv ${VENV_DIR}
+                    . ${VENV_DIR}/bin/activate
+
+                    python --version
+                    python -m pip install --upgrade pip setuptools wheel
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    . ${VENV_DIR}/bin/activate
+                    pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Install Playwright Browsers') {
+            steps {
+                sh '''
+                    . ${VENV_DIR}/bin/activate
+                    playwright install --with-deps
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh '''
+                    . ${VENV_DIR}/bin/activate
+
+                    pytest \
+                      -v \
+                      --tb=short \
+                      --html=reports/pytest-report.html \
+                      --self-contained-html \
+                      --alluredir=reports/allure-results
                 '''
             }
         }
     }
 
     post {
-    always {
-        script {
-            if (fileExists('reports/html/report.html')) {
-                publishHTML(target: [
-                    reportDir: 'reports/html',
-                    reportFiles: 'report.html',
-                    reportName: 'Playwright HTML Report',
-                    keepAll: true
-                ])
-            } else {
-                echo "HTML report not found, skipping publish"
+        always {
+            echo "Archiving test reports"
+
+            archiveArtifacts artifacts: 'reports/**/*', allowEmptyArchive: true
+
+            script {
+                if (fileExists('reports/pytest-report.html')) {
+                    echo "Pytest HTML report generated"
+                } else {
+                    echo "Pytest HTML report not found"
+                }
             }
         }
 
-        archiveArtifacts artifacts: 'screenshots/**, videos/**, traces/**', allowEmptyArchive: true
+        failure {
+            echo "Build failed"
+        }
+
+        success {
+            echo "Build successful"
+        }
+
+        cleanup {
+            sh '''
+                echo "Cleaning workspace virtual environment"
+                rm -rf ${VENV_DIR}
+            '''
         }
     }
 }
