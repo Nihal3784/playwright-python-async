@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'node'
-    }
-
     environment {
         VENV = ".venv"
     }
@@ -16,9 +12,10 @@ pipeline {
             }
         }
 
-        stage('Setup Python') {
+        stage('Setup Python Environment') {
             steps {
                 sh '''
+                    python3 --version
                     python3 -m venv $VENV
                     . $VENV/bin/activate
                     pip install --upgrade pip
@@ -28,7 +25,7 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Playwright Tests') {
             steps {
                 sh '''
                     . $VENV/bin/activate
@@ -43,12 +40,13 @@ pipeline {
             publishHTML(target: [
                 reportDir: 'reports/html',
                 reportFiles: 'report.html',
-                reportName: 'Playwright HTML Report'
+                reportName: 'Playwright HTML Report',
+                keepAll: true,
+                alwaysLinkToLastBuild: true
             ])
 
             allure([
                 includeProperties: false,
-                jdk: '',
                 results: [[path: 'reports/allure-results']]
             ])
 
