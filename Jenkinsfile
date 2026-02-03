@@ -6,7 +6,7 @@ pipeline {
     }
 
     triggers {
-        cron('15 16 * * *') // 4:15 PM IST daily
+        cron('20 16 * * *') // 4:15 PM IST daily
     }
 
     stages {
@@ -48,7 +48,7 @@ pipeline {
 Check the reports and screenshots attached.
 
 Jenkins Console: ${env.BUILD_URL}""",
-                to: 'youremail@example.com',
+                to: 'nihal.j@cronberry.com',
                 attachLog: true,
                 attachmentsPattern: 'screenshots/**, reports/**',
                 mimeType: 'text/html'
